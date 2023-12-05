@@ -1,9 +1,10 @@
 "use client";
 
+import axios from "axios";
 import { useCallback, useState } from "react"
 import Input from "@/components/Input"
 import Image from "next/image"
-
+import { signIn } from "next-auth/react";
 
 const Auth = () => {
     const [name, setName] = useState('')
@@ -11,10 +12,43 @@ const Auth = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [variant, setVariant] = useState<'login' | 'register' >('login')
-
     const toggleVariant = useCallback(() => {
         setVariant((currentVariant) => currentVariant === 'login' ? 'register' : 'login');
     }, [])
+
+    const login = useCallback(async () => {
+        try {
+            const response = await signIn('credentials', {
+                email: email,
+                password: password,
+                callbackUrl: '/'
+            })
+            
+            console.log(response)
+
+        } catch (error) {
+            console.log(error)
+        }
+    }, [email, password])
+
+    const register = useCallback( async () => {
+        try {
+            const response = await axios.post('/api/auth/register', {
+                name,
+                lastname,
+                email,
+                password,
+            })
+            if (response.status === 201) {
+                console.log('Usuario registrado')
+                login()
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
+    }, [name, lastname, email, password, login])
+
 
     return (
         <div className="relative h-full w-full bg-[url('/images/hero.jpg')] bg-no-repeatbg-center bg-fixed bg-cover">
@@ -83,7 +117,7 @@ const Auth = () => {
 
 
                         </div>
-                        <button className="bg-red-600 py-3 rounded-md text-white w-full mt-10 hover:bg-red-700 transition">
+                        <button onClick={variant === 'login' ? login : register} className="bg-red-600 py-3 rounded-md text-white w-full mt-10 hover:bg-red-700 transition">
                             {variant === 'login' ? 'Login' : 'Sign up'} 
                         </button>
                         <p className="text-neutral-500 mt-8">
